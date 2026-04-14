@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  username     String       @unique
+  email        String       @unique
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  players      Player[]
+  challenges   Challenge[]
+  matches      Match[]
+  settings     AppSettings?
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Player {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  rating     Int      @default(1200)
+  wins       Int      @default(0)
+  losses     Int      @default(0)
+  draws      Int      @default(0)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchesAsA Match[]  @relation("PlayerA")
+  matchesAsB Match[]  @relation("PlayerB")
+
+  @@unique([userId, name])
+  @@index([userId, rating])
+}
+
+model Challenge {
+  id         String   @id @default(cuid())
+  userId     String
+  title      String
+  difficulty String
+  prompt     String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches    Match[]
+
+  @@index([userId, createdAt])
+}
+
+model Match {
+  id              String    @id @default(cuid())
+  userId          String
+  playerAId       String
+  playerBId       String
+  challengeId     String?
+  challengeTitle  String
+  challengePrompt String
+  language        String
+  codeA           String
+  codeB           String
+  notes           String?
+  result          String
+  winnerId        String?
+  ratingBeforeA   Int
+  ratingBeforeB   Int
+  ratingAfterA    Int
+  ratingAfterB    Int
+  deltaA          Int
+  deltaB          Int
+  expectedA       Float
+  expectedB       Float
+  createdAt       DateTime  @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerA   Player     @relation("PlayerA", fields: [playerAId], references: [id], onDelete: Restrict)
+  playerB   Player     @relation("PlayerB", fields: [playerBId], references: [id], onDelete: Restrict)
+  challenge Challenge? @relation(fields: [challengeId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+model AppSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  kFactor         Int      @default(32)
+  defaultLanguage String   @default("JavaScript")
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

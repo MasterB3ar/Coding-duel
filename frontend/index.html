@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elo Code Arena</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar auth-topbar">
+        <div>
+          <div class="eyebrow">Elo Code Arena</div>
+          <h1>Code battles with accounts, sessions, and stored rankings.</h1>
+          <p class="subcopy">
+            This version is wired for real users. Register, sign in, manage your own arena,
+            and store all players, challenges, matches, and Elo settings in the database.
+          </p>
+        </div>
+        <div class="card">
+          <div class="section-title">Backend status</div>
+          <div id="healthBox" class="prompt-box">Checking server...</div>
+        </div>
+      </header>
+
+      <div id="messageBox" class="message hidden"></div>
+
+      <section id="authScreen" class="two-col auth-layout">
+        <div class="card">
+          <div class="section-title">Register</div>
+          <form id="registerForm" class="stack compact">
+            <label>
+              <span>Username</span>
+              <input id="registerUsername" type="text" placeholder="Username" />
+            </label>
+            <label>
+              <span>Email</span>
+              <input id="registerEmail" type="email" placeholder="Email" />
+            </label>
+            <label>
+              <span>Password</span>
+              <input id="registerPassword" type="password" placeholder="Password" />
+            </label>
+            <button type="submit">Create account</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Login</div>
+          <form id="loginForm" class="stack compact">
+            <label>
+              <span>Username or email</span>
+              <input id="loginIdentifier" type="text" placeholder="Username or email" />
+            </label>
+            <label>
+              <span>Password</span>
+              <input id="loginPassword" type="password" placeholder="Password" />
+            </label>
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="appScreen" class="hidden">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Signed in arena</div>
+            <h1>Manage players, run coding duels, and store every Elo change.</h1>
+            <p class="subcopy">
+              Accounts and sessions are active. All data below belongs to the logged-in user.
+            </p>
+          </div>
+          <div class="stack compact">
+            <div class="card mode-box">
+              <div class="label">User</div>
+              <div id="sessionUser" class="big-ish">Not signed in</div>
+              <div id="sessionEmail" class="muted top-gap-small"></div>
+            </div>
+            <button id="logoutBtn">Logout</button>
+          </div>
+        </header>
+
+        <section class="stats-grid">
+          <div class="card stat">
+            <div class="label">Players</div>
+            <div id="playersStat" class="big">0</div>
+          </div>
+          <div class="card stat">
+            <div class="label">Battles</div>
+            <div id="battlesStat" class="big">0</div>
+          </div>
+          <div class="card stat">
+            <div class="label">Top Rated</div>
+            <div id="topPlayerStat" class="smallish">-</div>
+          </div>
+          <div class="card stat">
+            <div class="label">K-Factor</div>
+            <div id="kFactorStat" class="big">32</div>
+          </div>
+        </section>
+
+        <nav class="tabs">
+          <button class="tab active" data-tab="overview">Overview</button>
+          <button class="tab" data-tab="arena">Battle Arena</button>
+          <button class="tab" data-tab="manage">Manage</button>
+          <button class="tab" data-tab="history">History</button>
+          <button class="tab" data-tab="settings">Settings</button>
+        </nav>
+
+        <section class="tab-panel active" id="panel-overview">
+          <div class="two-col">
+            <div class="card">
+              <div class="section-title">Leaderboard</div>
+              <div id="leaderboard" class="stack"></div>
+            </div>
+            <div class="stack">
+              <div class="card">
+                <div class="section-title">What is stored</div>
+                <ul class="plain-list">
+                  <li>Players and Elo ratings</li>
+                  <li>Challenges</li>
+                  <li>Match history</li>
+                  <li>Settings per user</li>
+                  <li>Session-based login state</li>
+                </ul>
+              </div>
+              <div class="card">
+                <div class="section-title">Formula</div>
+                <pre class="formula">R' = R + K × (S - E)</pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="panel-arena">
+          <div class="two-col wide-right">
+            <div class="stack">
+              <div class="card">
+                <div class="section-title">Match setup</div>
+                <div class="form-grid">
+                  <label>
+                    <span>Player A</span>
+                    <select id="playerASelect"></select>
+                  </label>
+                  <label>
+                    <span>Player B</span>
+                    <select id="playerBSelect"></select>
+                  </label>
+                  <label>
+                    <span>Challenge</span>
+                    <select id="challengeSelect"></select>
+                  </label>
+                  <label>
+                    <span>Language</span>
+                    <select id="languageSelect">
+                      <option>JavaScript</option>
+                      <option>TypeScript</option>
+                      <option>Python</option>
+                      <option>C++</option>
+                      <option>Java</option>
+                      <option>C#</option>
+                      <option>Go</option>
+                      <option>Rust</option>
+                    </select>
+                  </label>
+                </div>
+                <div id="customChallengeBox" class="stack hidden top-gap">
+                  <label>
+                    <span>Custom challenge title</span>
+                    <input id="customChallengeTitle" type="text" placeholder="Custom title" />
+                  </label>
+                  <label>
+                    <span>Custom challenge prompt</span>
+                    <textarea id="customChallengePrompt" rows="5" placeholder="Write the problem here"></textarea>
+                  </label>
+                </div>
+                <div class="top-gap">
+                  <div class="label">Challenge prompt</div>
+                  <div id="challengePreview" class="prompt-box"></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="section-title">Elo preview</div>
+                <div id="eloPreview" class="stack"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="section-title">Code duel</div>
+              <div class="editor-grid">
+                <div>
+                  <div class="label" id="playerALabel">Player A</div>
+                  <textarea id="codeA" class="editor" rows="18">function solve(input) {
+  return input;
+}</textarea>
+                </div>
+                <div>
+                  <div class="label" id="playerBLabel">Player B</div>
+                  <textarea id="codeB" class="editor" rows="18">function solve(input) {
+  return input;
+}</textarea>
+                </div>
+              </div>
+              <div class="top-gap">
+                <label>
+                  <span>Judge notes</span>
+                  <textarea id="judgeNotes" rows="4" placeholder="Reasoning, edge cases, comments"></textarea>
+                </label>
+              </div>
+              <div class="action-row top-gap">
+                <button id="playerAWinBtn" class="good">Player A wins</button>
+                <button id="drawBtn">Draw</button>
+                <button id="playerBWinBtn" class="bad">Player B wins</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="panel-manage">
+          <div class="two-col">
+            <div class="stack">
+              <div class="card">
+                <div class="section-title">Create player</div>
+                <form id="playerForm" class="stack compact">
+                  <label>
+                    <span>Player name</span>
+                    <input id="newPlayerName" type="text" placeholder="Player name" />
+                  </label>
+                  <button type="submit">Add player</button>
+                </form>
+              </div>
+              <div class="card">
+                <div class="section-title">Create challenge</div>
+                <form id="challengeForm" class="stack compact">
+                  <label>
+                    <span>Challenge title</span>
+                    <input id="newChallengeTitle" type="text" placeholder="Challenge title" />
+                  </label>
+                  <label>
+                    <span>Difficulty</span>
+                    <select id="newChallengeDifficulty">
+                      <option>Easy</option>
+                      <option selected>Medium</option>
+                      <option>Hard</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Prompt</span>
+                    <textarea id="newChallengePrompt" rows="5" placeholder="Describe the task"></textarea>
+                  </label>
+                  <button type="submit">Add challenge</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="card">
+                <div class="section-title">Players</div>
+                <div id="playersList" class="stack"></div>
+              </div>
+              <div class="card">
+                <div class="section-title">Challenges</div>
+                <div id="challengesList" class="stack"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="panel-history">
+          <div class="card">
+            <div class="section-title">Battle history</div>
+            <div id="historyList" class="stack"></div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="panel-settings">
+          <div class="two-col">
+            <div class="card">
+              <div class="section-title">Settings</div>
+              <form id="settingsForm" class="stack compact">
+                <label>
+                  <span>K-factor</span>
+                  <input id="kFactorInput" type="number" min="4" max="128" step="1" />
+                </label>
+                <label>
+                  <span>Default language</span>
+                  <select id="defaultLanguageInput">
+                    <option>JavaScript</option>
+                    <option>TypeScript</option>
+                    <option>Python</option>
+                    <option>C++</option>
+                    <option>Java</option>
+                    <option>C#</option>
+                    <option>Go</option>
+                    <option>Rust</option>
+                  </select>
+                </label>
+                <button type="submit">Save settings</button>
+              </form>
+            </div>
+            <div class="card">
+              <div class="section-title">Account notes</div>
+              <ul class="plain-list">
+                <li>Your arena data is isolated to your account.</li>
+                <li>Match results update ratings on the backend.</li>
+                <li>Passwords are hashed before storage.</li>
+                <li>Sessions are stored server-side.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </section>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
