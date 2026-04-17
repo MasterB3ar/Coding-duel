@@ -33,8 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function cacheElements() {
   [
     "messageBox", "healthBox", "authScreen", "appScreen", "registerForm", "loginForm", "logoutBtn",
-    "registerUsername", "registerEmail", "registerPassword", "loginIdentifier", "loginPassword",
-    "sessionUser", "sessionEmail", "playersStat", "battlesStat", "topPlayerStat", "kFactorStat",
+    "registerUsername", "registerPassword", "loginUsername", "loginPassword",
+    "sessionUser", "playersStat", "battlesStat", "topPlayerStat", "kFactorStat",
     "leaderboard", "playerASelect", "playerBSelect", "challengeSelect", "languageSelect",
     "customChallengeBox", "customChallengeTitle", "customChallengePrompt", "challengePreview",
     "eloPreview", "playerALabel", "playerBLabel", "codeA", "codeB", "judgeNotes",
@@ -158,7 +158,6 @@ async function onRegister(event) {
       method: "POST",
       body: {
         username: els.registerUsername.value.trim(),
-        email: els.registerEmail.value.trim(),
         password: els.registerPassword.value,
       },
     });
@@ -178,7 +177,7 @@ async function onLogin(event) {
     const result = await api("/api/auth/login", {
       method: "POST",
       body: {
-        identifier: els.loginIdentifier.value.trim(),
+        username: els.loginUsername.value.trim(),
         password: els.loginPassword.value,
       },
     });
@@ -270,7 +269,6 @@ function renderAll() {
 
 function renderHeader() {
   els.sessionUser.textContent = state.user ? state.user.username : "Not signed in";
-  els.sessionEmail.textContent = state.user ? state.user.email : "";
   const sorted = sortedPlayers();
   const top = sorted[0];
   els.playersStat.textContent = String(state.players.length);
