@@ -29,7 +29,7 @@ cd backend
 node -e "require('fs').copyFileSync('.env.example','.env')"
 npm install
 npx prisma generate
-npx prisma migrate dev --name init
+npx prisma db push
 npm run dev
 ```
 
@@ -38,3 +38,13 @@ Then open `http://localhost:3001`.
 ## Important
 
 For public deployment, do **not** use the old SQLite version. Use this version with Postgres.
+
+
+## Username-only auth
+
+This build removes email from the user-facing auth flow. New accounts use only:
+
+- username
+- password
+
+For deployment compatibility, the backend still fills an internal placeholder email value in the database so existing Postgres setups do not need a destructive schema change.
