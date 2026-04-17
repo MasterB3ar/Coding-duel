@@ -48,7 +48,6 @@ function sanitizeUser(user) {
   return {
     id: user.id,
     username: user.username,
-    email: user.email,
     createdAt: user.createdAt,
   };
 }
@@ -233,22 +232,19 @@ app.get("/api/auth/session", async (req, res, next) => {
 app.post("/api/auth/register", async (req, res, next) => {
   try {
     const username = String(req.body?.username || "").trim();
-    const email = String(req.body?.email || "").trim().toLowerCase();
     const password = String(req.body?.password || "");
 
     if (username.length < 3) {
       return res.status(400).json({ error: "Username must be at least 3 characters." });
-    }
-    if (!email.includes("@")) {
-      return res.status(400).json({ error: "A valid email is required." });
     }
     if (password.length < 6) {
       return res.status(400).json({ error: "Password must be at least 6 characters." });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const compatibilityEmail = `${username.toLowerCase().replace(/[^a-z0-9_\-.]/g, "-")}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}@internal.local`;
     const user = await prisma.user.create({
-      data: { username, email, passwordHash },
+      data: { username, email: compatibilityEmail, passwordHash },
     });
 
     await seedUserArena(user.id);
@@ -257,7 +253,7 @@ app.post("/api/auth/register", async (req, res, next) => {
     res.status(201).json({ user: sanitizeUser(user) });
   } catch (error) {
     if (error.code === "P2002") {
-      return res.status(409).json({ error: "Username or email already exists." });
+      return res.status(409).json({ error: "Username already exists." });
     }
     next(error);
   }
@@ -265,26 +261,24 @@ app.post("/api/auth/register", async (req, res, next) => {
 
 app.post("/api/auth/login", async (req, res, next) => {
   try {
-    const identifier = String(req.body?.identifier || "").trim().toLowerCase();
+    const username = String(req.body?.username || "").trim();
     const password = String(req.body?.password || "");
 
-    if (!identifier || !password) {
-      return res.status(400).json({ error: "Login and password are required." });
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password are required." });
     }
 
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [{ email: identifier }, { username: identifier }],
-      },
+    const user = await prisma.user.findUnique({
+      where: { username },
     });
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid login." });
+      return res.status(401).json({ error: "Invalid username or password." });
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
-      return res.status(401).json({ error: "Invalid login." });
+      return res.status(401).json({ error: "Invalid username or password." });
     }
 
     if (req.sessionToken) {
